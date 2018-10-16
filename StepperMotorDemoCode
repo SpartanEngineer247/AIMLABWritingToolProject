@@ -1,0 +1,280 @@
+/****************************************************************************** 
+SparkFun Easy Driver Basic Demo
+Toni Klopfenstein @ SparkFun Electronics
+March 2015
+https://github.com/sparkfun/Easy_Driver
+
+Simple demo sketch to demonstrate how 5 digital pins can drive a bipolar stepper motor,
+using the Easy Driver (https://www.sparkfun.com/products/12779). Also shows the ability to change
+microstep size, and direction of motor movement.
+
+Development environment specifics:
+Written in Arduino 1.6.0
+
+This code is beerware; if you see me (or any other SparkFun employee) at the local, and you've found our code helpful, please buy us a round!
+Distributed as-is; no warranty is given.
+
+Example based off of demos by Brian Schmalz (designer of the Easy Driver).
+http://www.schmalzhaus.com/EasyDriver/Examples/EasyDriverExamples.html
+******************************************************************************/
+//Declare pin functions on Redboard
+//Below are all boolean values
+#define stp 2 //high makes the motor move, low makes it not move
+#define dir 3 //high is clockwise direction, low is counterclockwise direction
+#define MS1 4 //divider pin 1, HIGH allows it to make a microstep
+#define MS2 5 //divider pin 2, HIGH allows it to make a microstep
+#define EN  6 //enabler, determines whether the motor is engaged or not, HIGH turns off the motor
+
+//Below are all copies of above, except now there's two of them because you need to drive both motors
+#define stp2   7
+#define dir2   8
+#define MS1_2  9
+#define MS2_2 10
+#define EN2   11
+
+//Declare variables for functions
+char user_input;
+int x;
+int y;
+int state;
+
+int x2;
+int y2;
+int state2;
+
+void setup() {
+  //these values just assigns what kind of roles the pins will do - the outputs
+  pinMode(stp, OUTPUT);
+  pinMode(dir, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
+  pinMode(EN, OUTPUT);
+
+  pinMode(stp2, OUTPUT);
+  pinMode(dir2, OUTPUT);
+  pinMode(MS1_2, OUTPUT);
+  pinMode(MS2_2, OUTPUT);
+  pinMode(EN2, OUTPUT);
+ 
+  resetEDPins(); //Set step, direction, microstep and enable pins to default states
+  resetEDPins2();
+  Serial.begin(9600); //Open Serial connection for debugging
+  Serial.println("Begin motor control");
+  Serial.println();
+  //Print function list for user selection
+  Serial.println("Enter number for control option:");
+  Serial.println("1. Turn at default microstep mode.");
+  Serial.println("2. Reverse direction at default microstep mode.");
+  Serial.println("3. Turn at 1/8th microstep mode.");
+  Serial.println("4. Step forward and reverse directions.");
+  Serial.println();
+}
+
+//Main loop
+void loop() {
+  while(Serial.available()){
+      user_input = Serial.read(); //Read user input and trigger appropriate function
+      digitalWrite(EN, LOW); //Pull enable pin low to allow motor control
+      digitalWrite(EN2, LOW); //Pull enable pin low to allow motor control
+      if (user_input =='1')
+      {
+   //      StepForwardDefault();
+   //      StepForwardDefault2();
+      }
+      else if(user_input =='2')
+      {
+    //    ReverseStepDefault();
+    //    ReverseStepDefault2();
+      }
+      else if(user_input =='3')
+      {
+        SmallStepMode();
+        SmallStepMode2();
+      }
+      else if(user_input =='4')
+      {
+    //    ForwardBackwardStep();
+    //    ForwardBackwardStep2();
+      }
+      else
+      {
+        Serial.println("Invalid option entered.");
+      }
+      resetEDPins();
+      resetEDPins2();
+  }
+}
+
+//Reset Easy Driver pins to default states
+void resetEDPins()
+{
+  digitalWrite(stp, LOW);
+  digitalWrite(dir, LOW);
+  digitalWrite(MS1, LOW);
+  digitalWrite(MS2, LOW);
+  digitalWrite(EN, HIGH);
+}
+
+void resetEDPins2()
+{
+  digitalWrite(stp2, LOW);
+  digitalWrite(dir2, LOW);
+  digitalWrite(MS1_2, LOW);
+  digitalWrite(MS2_2, LOW);
+  digitalWrite(EN2, HIGH);
+}
+
+//Default microstep mode function
+void StepForwardDefault()
+{
+  Serial.println("Moving forward at default step mode.");
+  digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+  for(x= 1; x<1000; x++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+
+
+void StepForwardDefault2()
+{
+  Serial.println("Moving forward at default step mode.");
+  digitalWrite(dir2, LOW); //Pull direction pin low to move "forward"
+  for(x2= 1; x2<1000; x2++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp2,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp2,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+//Reverse default microstep mode function
+void ReverseStepDefault()
+{
+  Serial.println("Moving in reverse at default step mode.");
+  digitalWrite(dir, HIGH); //Pull direction pin high to move in "reverse"
+  for(x= 1; x<1000; x++)  //Loop the stepping enough times for motion to be visible
+  {
+    digitalWrite(stp,HIGH); //Trigger one step
+    delay(1);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+
+void ReverseStepDefault2()
+{
+  Serial.println("Moving in reverse at default step mode.");
+  digitalWrite(dir2, HIGH); //Pull direction pin high to move in "reverse"
+  for(x2= 1; x2<1000; x2++)  //Loop the stepping enough times for motion to be visible
+  {
+    digitalWrite(stp2,HIGH); //Trigger one step
+    delay(1);
+    digitalWrite(stp2,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+// 1/8th microstep foward mode function
+void SmallStepMode()
+{
+  Serial.println("Stepping at 1/8th microstep mode.");
+ 
+  digitalWrite(dir, HIGH); //Pull direction pin low to move "forward"
+  digitalWrite(MS1, HIGH); //Pull MS1, and MS2 high to set logic to 1/8th microstep resolution
+  digitalWrite(MS2, HIGH);
+  for(x= 1; x<100; x++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+
+
+void SmallStepMode2()
+{
+  Serial.println("Stepping at 1/8th microstep mode.");
+  digitalWrite(dir2, HIGH); //Pull direction pin low to move "forward"
+  digitalWrite(MS1_2, HIGH); //Pull MS1, and MS2 high to set logic to 1/8th microstep resolution
+  digitalWrite(MS2_2, HIGH);
+  for(x2= 1; x2<100; x2++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp2,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp2,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+
+//Forward/reverse stepping function
+void ForwardBackwardStep()
+{
+  Serial.println("Alternate between stepping forward and reverse.");
+  for(x= 1; x<5; x++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    //Read direction pin state and change it
+    state=digitalRead(dir);
+    if(state == HIGH)
+    {
+      digitalWrite(dir, LOW);
+    }
+    else if(state ==LOW)
+    {
+      digitalWrite(dir,HIGH);
+    }
+    
+    for(y=1; y<1000; y++)
+    {
+      digitalWrite(stp,HIGH); //Trigger one step
+      delay(1);
+      digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+      delay(1);
+    }
+  }
+  Serial.println("Enter new option:");
+  Serial.println();
+}
+
+void ForwardBackwardStep2()
+{
+  Serial.println("Alternate between stepping forward and reverse.");
+  for(x2= 1; x2<5; x2++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    //Read direction pin state and change it
+    state2=digitalRead(dir2);
+    if(state2 == HIGH)
+    {
+      digitalWrite(dir2, LOW);
+    }
+    else if(state2 ==LOW)
+    {
+      digitalWrite(dir2,HIGH);
+    }
+    
+    for(y2=1; y2<1000; y2++)
+    {
+      digitalWrite(stp2,HIGH); //Trigger one step
+      delay(1);
+      digitalWrite(stp2,LOW); //Pull step pin low so it can be triggered again
+      delay(1);
+    }
+  }
+  Serial.println("Enter new option:");
+  Serial.println();
+}
