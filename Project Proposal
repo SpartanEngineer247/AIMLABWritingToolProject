@@ -1,0 +1,11 @@
+AIMLAB Writing Tool Project
+ Team members are: Eddie Seung Hun Ha (esh376), Mariam ElSahhar (me1693), Ahmad Salous (as12106)
+
+The device we're designing aims to help people with any physical impairments write.
+The device utilizes two stepper motors moving two arms that are connected together at a point that has an electromagnet.
+The basic concept is: the user would hold a pen with a magnet at its tip, the motors would be programmed to move the electromagnet
+in the shape of a certain letter to guide the user's hand along a specified path indicated on the screen, the electromagnet would be
+programmed such that, should the user stray away from the path indicated on the screen the strength of the magnet would 
+increase pulling the user's hand back. 
+
+The device would utilize: 2 stepper motors, an electromagnet, an Arduino mini board (and later on a Raspberry Pi) 
