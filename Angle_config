@@ -1,0 +1,140 @@
+//Read me please:
+//You can notice that the code has not changed all that much, George told me that the normal step mode isn't useful for our purposes
+//thus it was removed, the code written/copied below can be given an angle and it will move the point to where it needs to go
+//I tried my best to emulate Eddie's style of documentation but of course feel free to amend it however you see fit
+//If the angle given is positive the motor will push the 'head' counter-clockwise and vice versa
+//on a side note, George sent all of us the inverse schematic texts, read through them, and if you have any questions post them on the
+//group chat, I think we all need to have an understanding of what we are working with.
+
+//Declare pin functions on Redboard
+//Below are all boolean values
+//Motor 1 is the right motor on the board 
+#define stp 2 //high makes the motor move, low makes it not move
+#define dir 3 //high is clockwise direction, low is counterclockwise direction
+#define MS1 4 //divider pin 1, HIGH allows it to make a microstep
+#define MS2 5 //divider pin 2, HIGH allows it to make a microstep
+#define EN  6 //enabler, determines whether the motor is engaged or not, HIGH turns off the motor
+
+//Below are all copies of above, except now there's two of them because you need to drive both motors
+//Motor 2 is the left motor on the board
+#define stp2   7
+#define dir2   8
+#define MS1_2  9
+#define MS2_2 10
+#define EN2   11
+
+//Declare variables for functions
+char user_input;
+int x;
+int y;
+int state;
+double angle;
+
+int x2;
+int y2;
+int state2;
+
+void setup() {
+  //these values just assigns what kind of roles the pins will do - the outputs
+  pinMode(stp, OUTPUT);
+  pinMode(dir, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
+  pinMode(EN, OUTPUT);
+
+  pinMode(stp2, OUTPUT);
+  pinMode(dir2, OUTPUT);
+  pinMode(MS1_2, OUTPUT);
+  pinMode(MS2_2, OUTPUT);
+  pinMode(EN2, OUTPUT);
+ 
+  resetEDPins(); //Set step, direction, microstep and enable pins to default states
+  resetEDPins2();
+  Serial.begin(9600); //Open Serial connection for debugging
+  Serial.println("Begin motor control");
+  Serial.println();
+  //Print function list for user selection
+  Serial.println("Through what angle (in degrees) do you want the motor to move?");
+  Serial.println("If the angle is negative, the motor will move counte-clockwise, and vice versa.");
+  Serial.println();
+}
+
+//Main loop
+void loop() {
+  while(Serial.available()){
+      angle = Serial.parseInt(); //Assign user input to the angle
+      digitalWrite(EN, LOW); //Pull enable pin low to allow motor control
+      digitalWrite(EN2, LOW); //Pull enable pin low to allow motor control
+     
+        SmallStepMode(angle);
+        SmallStepMode2(angle);//Motor moves the indicated angle
+   
+        resetEDPins();
+        resetEDPins2();//All pins are reset in order to use again
+  }
+}
+
+//Reset Easy Driver pins to default states
+void resetEDPins()
+{
+  digitalWrite(stp, LOW);
+  digitalWrite(dir, LOW);
+  digitalWrite(MS1, LOW);
+  digitalWrite(MS2, LOW);
+  digitalWrite(EN, HIGH);
+}
+
+void resetEDPins2()
+{
+  digitalWrite(stp2, LOW);
+  digitalWrite(dir2, LOW);
+  digitalWrite(MS1_2, LOW);
+  digitalWrite(MS2_2, LOW);
+  digitalWrite(EN2, HIGH);
+}
+// 1/8th microstep foward mode function
+void SmallStepMode(double angle)
+{
+  if(angle>0){//if number of steps given is negative;
+    digitalWrite(dir, LOW); //dir set to LOW or counter-clockwise
+  }
+  else if(angle<0){
+    digitalWrite(dir, HIGH);// else, dir is set to HIGH or clockwise
+  }
+
+  int steps= angle/0.225; //one microstep is 0.225 degrees thus the number of steps is equal to the angle (in degrees/0.225)
+  digitalWrite(MS1, HIGH); //Pull MS1, and MS2 high to set logic to 1/8th microstep resolution
+  digitalWrite(MS2, HIGH);
+  for(x= 0; x<abs(steps); x++)  //Loop the forward stepping motion 'steps' number of times. abs() included to allow for negative steps
+  {
+    digitalWrite(stp,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
+
+
+void SmallStepMode2(double angle)
+{
+   if(angle>0){//if number of steps given is negative;
+    digitalWrite(dir2, LOW); //dir set to LOW or counter-clockwise
+  }
+  else if(angle<0){
+    digitalWrite(dir2, HIGH);// else, dir is set to HIGH or clockwise
+  }
+  int steps=angle/0.225; //one microstep is 0.225 degrees thus the number of steps is equal to the angle (in degrees/0.225)
+  digitalWrite(MS1_2, HIGH); //Pull MS1, and MS2 high to set logic to 1/8th microstep resolution
+  digitalWrite(MS2_2, HIGH);
+  for(x2= 0; x2<abs(steps); x2++)  //Loop the forward stepping motion 'steps' number of times. abs() included to allow for negative steps
+  {
+    digitalWrite(stp2,HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp2,LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+  }
+  Serial.println("Enter new option");
+  Serial.println();
+}
