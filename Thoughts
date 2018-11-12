@@ -1,0 +1,32 @@
+a couple of things i've been working on:
+1. A way to initalise the position of the motor in the beginning of the loop (still don't have a good solution)
+2. a way of implementing the inverse kinematics
+
+I still don't have a good solution to the first problrm, feel free to discuss, but the second problem is doable, the basic concept is this:
+we set a constant number of intervals for every letter in the alaphabet (e.g. for the letter L there will be 40 dots to connect, thus the
+motor needs to be programed to move the magnet across those dots.)This part can be purely hardcoded as i can't think of a function that
+does that, hardcoding shouldn't be too much of a hassle though. we then develop a function that takes in those 40 dots' x and y coordin-
+ates, and spits out an angle for both motors (this is done soley using the inverse kinematics formulas we got from george.) These angles
+will be stored in an array corresponding to each of the letters. These arrays are going to be what represents each letter for our motors
+we then develop a function that calls itself (recursion) this function takes as it's input the two arrays generated (2 as there is an array
+for each motor) and it's last position (angle of the motors) then it moves the motors by the corresponding angles. The function stops once
+a certain counter matches the number of points (i.e. this function stops when for the letter L that counter reaches 40.) 
+
+A couple of things we need to do before that is figure out how to intialise the position of both motors, the one idea i had was to make
+them move in a certain direction a certain number of steps that i know exceeds their maximum range of motion but that might damage the 
+motors (that's why it's a bad idea) and i can't figure out other solutions that don't involve a sensor, I'll ask George for his input maybe
+he has some ideas.
+
+another thing we need to know is the size and dimensions of our work space, there's a section in the pdf George sent us about that. This
+is a simple matter of making measurements on the actual hardware and doing some maths,shouldn't be difficult, knowing the size and 
+position of our workspace should help with position control and tracking (for example since we know that the motor can't exit the 
+workspace we'll have a range of the angles the motors can be in)
+
+as to how we'll keep track of the motors during run-time, we'll have 2 variables that are constantly updated with every movement.
+
+more comments: we need to adjust the code such that the motors move sequentially (both at the same time or one after the other) they can't
+move independently.
+
+I think that is it in regards to the inverse kinematics portion, if you have other ideas post them here and tell us on the group so that
+we're all up to date, I'll be working on the code that moves the motors (the recursive function that takes in the angles and moves the
+motors accordingly.) I'll test out said function on either thursday or wednesday put ill post it when im done with it.
