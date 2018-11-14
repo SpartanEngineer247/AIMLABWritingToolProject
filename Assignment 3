@@ -1,0 +1,151 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+#define Row 21
+#define Col 17
+
+int counter(int &row_size);
+void LoadData(int temp[], int speed[], float drop[][Col], int row_size, int col_size);
+int findSpeed(float user_speed, int speed[], int size);
+int findTemp(float user_temp, int temp[], int size);
+
+int main() {
+
+	int *Temp_Ptr, *Speed_Ptr;
+	int row_size = 0, col_size = counter(row_size);
+	float user_temp, user_speed;
+	string word;
+	
+	Temp_Ptr = new int[col_size];
+	Speed_Ptr = new int[row_size];
+
+	float drop[Row][Col];
+
+	LoadData(Temp_Ptr, Speed_Ptr, drop, row_size, col_size);
+
+	while (true) {
+		cout << "To generate a wind chill temperature input the values requested, to terminate the program type exit" << endl;
+		cout << "Please enter the temperature" << endl;
+		while (true) {
+			cin >> word;
+			if (word == "exit") {
+				cout << "Exiting the program." << endl;
+				system("pause");
+				delete[] Temp_Ptr, Speed_Ptr;
+				return 0;
+			}
+			else
+				user_temp = stoi(word);
+
+			if (user_temp>Temp_Ptr[0] || user_temp<Temp_Ptr[col_size-1])
+				cout << "Temperature is outside of range, input a value between " << Temp_Ptr[0] << " and " << Temp_Ptr[col_size-1] << endl;
+			else
+				break;
+		}
+
+		cout << "Please enter the wind speed" << endl;
+		while (true) {
+			cin >> user_speed;
+			if (user_speed<Speed_Ptr[0] || user_speed>Speed_Ptr[row_size-1])
+				cout << "Speed is outside of range, input a value between " << Speed_Ptr[0] << " and " << Speed_Ptr[row_size-1] << endl;
+			else
+				break;
+		}
+
+		int S_index = findSpeed(user_speed, Speed_Ptr, row_size);
+		int T_index = findTemp(user_temp, Temp_Ptr, col_size);
+
+		cout << "The wind chill temperature for these parameters is: " << user_temp - drop[S_index][T_index] << endl;
+	}
+
+	delete[] Temp_Ptr, Speed_Ptr;
+	system("pause");
+	return 0;
+}
+
+int counter(int &row_size) {
+
+	double value;
+	int col_size = 0;
+
+	ifstream loading;
+	loading.open("chill.txt");
+
+	if (loading.fail()) {
+		cerr << "Error opening the file." << endl;
+		cerr << "Terminating program." << endl;
+		system("pause");
+		exit(-1);
+	}
+
+	do {
+		loading >> value;
+		col_size++;
+	} while (loading.get() != '\n');
+
+	do {
+		loading >> value;
+		row_size++;
+	} while (loading.get() != '\n');
+
+	loading.close();
+
+	return col_size;
+}
+
+void LoadData(int temp[], int speed[], float drop[][Col], int row_size, int col_size) {
+
+	ifstream loading;
+	loading.open("chill.txt", ios::in);
+
+	for (int x = 0; x < col_size; x++) {
+		loading >> temp[x];
+	}
+
+	for (int x = 0; x < row_size; x++) {
+		loading >> speed[x];
+	}
+
+	for (int x = 0; x < row_size; x++) {
+		for (int i = 0; i < col_size; i++) {
+			loading >> drop[x][i];
+			if (drop[x][i] == '\0') {
+				cerr << "File does not contain all values needed." << endl;
+				cerr << "Terminating program." << endl;
+				system("pause");
+				exit(-1);
+			}
+		}
+	}
+}
+
+int findSpeed(float user_speed, int speed[], int size) {
+	for (int x = 0; x < size; x++) {
+		if (user_speed == speed[x])
+			return x;
+		else if (user_speed>speed[x] && user_speed<speed[x + 1]) {
+			if (user_speed < ((speed[x] + speed[x + 1]) / 2.0))
+				return x;
+			else
+				return x + 1;
+		}
+	}
+
+}
+
+int findTemp(float user_temp, int temp[], int size) {
+	for (int x = 0; x < size; x++) {
+		if (user_temp == temp[x])
+			return x;
+		else if (user_temp<temp[x] && user_temp>temp[x + 1]) 
+			if (user_temp > ((temp[x] + temp[x + 1]) / 2.0))
+				return x;
+			else
+				return x + 1;
+		
+	}
+
+}
