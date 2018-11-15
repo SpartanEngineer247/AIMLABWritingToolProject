@@ -1,5 +1,5 @@
 # AIMLABWritingToolProject
-Participants: Eddie Seung Hun Ha (esh376), Mariam ElSahhar (me1693), Ahmad Salous (as12106)
+Participants: Eddie Seung Hun Han (esh376), Mariam ElSahhar (me1693), Ahmad Salous (as12106)
 Supervisor: Mohamad Eid (mohamad.eid), Georgios Korres (georgios.korres)
 
 Programming Language: Python and/or C++
