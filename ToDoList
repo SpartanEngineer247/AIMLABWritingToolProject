@@ -1,3 +1,11 @@
+November 15th
+
+- Updated comments, please read
+- Modify the Angle_config so that the motors know their own position
+- Allow the motors to move together
+... i just realized that literally means doing inverse kinematics
+
+
 
 November 12nd
 
