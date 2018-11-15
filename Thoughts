@@ -1,6 +1,23 @@
 
 The answer to question 1 I think is rather simple - to re-initialize the motor positions after every operation 'set' so that it always
-goes to a certain position.
+goes to a certain position. The way to implement it would be to use a global variable or a class variable (maybe?) which keeps track of
+the motors' positions in the number of steps - positive clockwise and negative anticlockwise, for example. It then performs a function to
+bring the motor to 'zero' position.
+I think using an object might not be a bad idea because we have Motor1 and Motor2 which are both same functions, anyway.
+Moreover, we can use a destructor function to return the motor position to zero.
+I'll try this by Friday.
+
+Question 2 is actually kinda hard, because I totally forgot that the motors have to move together. And smoothly, too.
+Likely we have to employ some kind of speed control later on as well, which complicates the matters.
+Maybe not? If there are enough points? Who knows. Then we need a mathematical way to determine which of the four motor positions
+will be accepted (inverse kinematics paper says that there are four ways to get to the same position. the program must be able to
+make a decision which one to get to).
+We can either have a program do a calculation for the nearest movement... or just restrict left motor to positive position only.
+That might be easier.
+
+Anyway, I think inverse kinematics is a bit harder than expected, especially because we need to figure out a way for the motors
+to move simultaneously now. Let's aim to get that working before inverse kinematics... by Sunday.
+
 
 Nov15update_above>>>>>>>>>>>>>>>>>>>>
 
