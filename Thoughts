@@ -1,3 +1,9 @@
+
+The answer to question 1 I think is rather simple - to re-initialize the motor positions after every operation 'set' so that it always
+goes to a certain position.
+
+Nov15update_above>>>>>>>>>>>>>>>>>>>>
+
 a couple of things i've been working on:
 1. A way to initalise the position of the motor in the beginning of the loop (still don't have a good solution)
 2. a way of implementing the inverse kinematics
