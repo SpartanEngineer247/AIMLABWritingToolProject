@@ -1,4 +1,4 @@
-As to whihh configuration we're using for the inverse kinematics, we're definitely using the +- configuration bottom left corner) 
+As to which configuration we're using for the inverse kinematics, we're definitely using the +- configuration (bottom left corner 
 diagram in the paper), we're restricted to using this particular one as our motors cannot move in the other ways, those are restricted
 to setups that have full 360 range for the arms. So that might simplify things a bit. As to implemting a way for the motor to move,
 provided I know where the motor is gonna start I can tell it how and where to move. The basic idea is having a 'point' class that holds
@@ -14,7 +14,8 @@ set ourselves.
 tomorrow I'm going to the AIM lab to make some measurements, all of which are gonna be posted in a document, this document will hold:
       -size and location of workspace
       -length of arms
-      -intial x,y point or the 'origin' if you will
+      -some diagrams if i can upload pics, i think i can.
+      -intial (x,y) point or the 'origin' if you will
       
 The last value needs to be included as all our x,y coordinates will be offset by the difference from that intial point to our workspace,
 if I'm not making any sense right now, I'll make the measurements and explain using some diagrams.
