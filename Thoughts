@@ -8,7 +8,7 @@ N number of times where N is the number of points, implementaion is gonna be a b
                  angle to move through=angle of new position - angle of last position
                  
 This value is then passed to the loop that moves the motor the appropriate number of micropsteps on whichever direction. At the end, we 
-move the motor back to it's intial poistion via the same process except that the "angle of last position" is a constant that we're gonna
+move the motor back to it's intial poistion via the same process except that the "angle of new position" is a constant that we're gonna
 set ourselves.
 
 tomorrow I'm going to the AIM lab to make some measurements, all of which are gonna be posted in a document, this document will hold:
