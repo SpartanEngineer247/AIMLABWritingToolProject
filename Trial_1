@@ -15,14 +15,18 @@
 
 #define num_points 60
 
-#define A1 1.571 
-#define A2 1.571 // angle in radians of the intial position (it's 90 degrees)
+//These variables are the angle of the motor at initial position (90 degrees) in radians
+#define A1 = 1.5708 
+#define A2 = 1.5708
 
-#define t 2// This effectively controls the speed of the movement, the larger t is the longer all the delays are
+//This variable controls the speed of the motor movement. The larger the value t the slower the movement
+#define t = 2
 
 class Point {
 	double x, y;
-	const double la = 0.1, lb = 0.1, lc = 0.1;// These are measured in m
+	
+	//These values are the lengths expressed in meters
+	const double la = 0.1, lb = 0.1, lc = 0.1;
 public:
 	Point() {
 		x = 0.05;// I used this as the default constructor for testing purposes only
@@ -56,7 +60,6 @@ public:
 };
 
 //Declare variables for functions
-//I think all of these variables will end up being switched out, most of them are redundent or useless.
 char user_input;
 int x;
 int y;
@@ -213,7 +216,8 @@ void SmallStep(double angle1, double angle2) {
 	else
 		Max = steps2;
 
-	for (int x = 0; x < Max; x++) {// This loop is what makes sure the movement of the motor is smooth, it ensures that the motors take sequential steps
+	// This loop is ensure that the motor's movements are smooth as it forces the motor to take sequential steps
+	for (int x = 0; x < Max; x++) {
 		if (steps1 > 0) {
 			digitalWrite(stp1, HIGH);
 			delay(t);
