@@ -1,0 +1,21 @@
+//gets line (array of Points) from initial Point i to final Point l
+void getLine(Point i, Point l, Point line[]) {
+	int n = 10; //number of intervals (for now?)
+	//a and b are the differences between the final and initial points
+	double a = l.getX() - i.getX(), b = l.getY() - i.getY();
+	//divided by the number of intervals, that's the length of each segment
+	double delX = a / n, delY = b / n;
+	//temporarily hold the coordinates of each step for array initialization
+	double x, y;
+
+	//loop starts from 1 because the final position should be the last point in the array
+	for (int j = 1; j <= n; j++) {
+		//x and y coordinates of the points on the line
+		x = i.getX() + j * delX;
+		y = i.getY() + j * delY;
+
+		//sets the coordinates of the Points of the array accordingly
+		line[j - 1].setX(x);
+		line[j - 1].setY(y);
+	}
+}
