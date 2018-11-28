@@ -22,9 +22,10 @@
 //This variable controls the speed of the motor movement. The larger the value t the slower the movement
 #define t = 2
 
+//Point class. Instance variables: x and y. Accessor, mutator, and getAngle functions.
 class Point {
 	double x, y;
-	
+
 	//These values are the lengths expressed in meters
 	const double la = 0.1, lb = 0.1, lc = 0.1;
 public:
@@ -33,22 +34,32 @@ public:
 		y = 0;
 	}
 
+	//setters
 	void setX(double x) {
 		this->x = x;
 	}
-
 	void setY(double y) {
 		this->y = y;
 	}
+	//getters
+	double getX() {
+		return x;
+	}
+	double getY() {
+		return y;
+	}
 
+
+	//inverse kinematics for theta1
 	double getAngle1() {
 		double E1 = -2 * la*x;
 		double F1 = -2 * la*y;
 		double G1 = la * la - lb * lb + x * x + y * y;
 
-		return 2 * atan((-1 * F1 + sqrt(E1 * E1 + F1 * F1 - G1 * G1)) / (G1 - E1));// Math provided by george
+		return 2 * atan((-1 * F1 + sqrt(E1 * E1 + F1 * F1 - G1 * G1)) / (G1 - E1));
 	}
 
+	//inverse kinematics for theta4
 	double getAngle2() {
 		double E4 = 2 * la*(lc - x);
 		double F4 = -2 * la * y;
@@ -103,43 +114,48 @@ void loop() {
 		digitalWrite(EN1, LOW); //Pull enable pin low to allow motor control
 		digitalWrite(EN2, LOW); //Pull enable pin low to allow motor control
 
+		//An array of Point objects, and a point P1
 		Point P[num_points], P1;
 		// This was added to test the functionality of the motor if a point with x,y coordinates was passed
 		//The motor then should move the effector P to that point
 		//The array with [num_points] size is how most likely how the device will operate in the end, as we're gonna be passing
 		//an array filled with points to represent a letter (or any shape)
-		double angle1[num_points], angle2[num_points];
+
 		//These arrays hold the angles that correspond to the points
+		double angle1[num_points], angle2[num_points];
 
 		P1.setX(0);
 		P1.setY(18);// Added for testing
 
 
-
-		SmallStep(P1.getAngle1(), P1.getAngle2());// Small step is the function that moves the motor by a certain angle, it needs two arguments
-		//the angle of the first and second motors
+		// Small step is the function that moves the motor by a certain angle, it needs two arguments:
+		//the angles of the first and second motors
+		SmallStep(P1.getAngle1(), P1.getAngle2());
 		delay(10000);
 
-		for (int x = num_points - 1; x >= 0; x--) {// loop to set the points to a straight line. purely for testing
+		// loop to set the points to a straight line. purely for testing (we'll have the letter arrays later on)
+		for (int x = num_points - 1; x >= 0; x--) {
 			P[x].setY(x*0.01);
 			P[x].setX(0.05);
 		}
 
+		//gets the corresponding angles for the Points in the array
 		for (int x = 0; x < num_points; x++) {
 			angle1[x] = P[x].getAngle1();
 			angle2[x] = P[x].getAngle2();
 		}
 
-
-		movement(angle1, angle2);// movement is the function that moves P across entire shapes
+		//movement is the function that moves P across entire shapes (aka collections/arrays of angles)
+		movement(angle1, angle2);
 		delay(3000);
 
 
 		//SmallStepMode1(angle);
 		//SmallStepMode2(angle);//Motor moves the indicated angle
 
+		//All pins are reset in order to use again
 		resetEDPins1();
-		resetEDPins2();//All pins are reset in order to use again
+		resetEDPins2();
 	}
 }
 
@@ -152,7 +168,6 @@ void resetEDPins1()
 	digitalWrite(MS2_1, LOW);
 	digitalWrite(EN1, HIGH);
 }
-
 void resetEDPins2()
 {
 	digitalWrite(stp2, LOW);
@@ -162,28 +177,39 @@ void resetEDPins2()
 	digitalWrite(EN2, HIGH);
 }
 
+
+//takes two arrays of angles (one for each motor), moves through these angles
 void movement(double motor1[], double motor2[]) {
 
+	//difference between intial and final positions are obtained
 	double angle1 = motor1[0] - A1;
-	double angle2 = motor2[0] - A2;// difference between intial and final positions are obtained
+	double angle2 = motor2[0] - A2;
 
-	SmallStep(angle1, angle2);// this is the first step
+	//this is the first step
+	SmallStep(angle1, angle2);
 
-	for (int x = 1; x < num_points; x++) {// loop that moves the motor across the length and path of a shape or letter
+	// loop that moves the motor across the length and path of a shape or letter (aka array of angles)
+	for (int x = 1; x < num_points; x++) {
+		//gets difference between every angle and the previous one
 		angle1 = motor1[x] - motor1[x - 1];
 		angle2 = motor2[x] - motor2[x - 1];
 
+		//passes to the actual motion function
 		SmallStep(angle1, angle2);
-
 	}
 
+	//difference between initial and last angle
 	angle1 = A1 - motor1[num_points - 1];
 	angle2 = A2 - motor2[num_points - 1];
 
-	SmallStep(angle1, angle2);// Here, P is put back in it's intial position
+	//Here, P is put back in its intial position
+	//(by moving it through the difference between the last and the initial angles)
+	//we'll add other functions to make the motion smoother though
+	SmallStep(angle1, angle2);
 
 }
 
+//moves motors by specified angles
 void SmallStep(double angle1, double angle2) {
 
 	if (angle1 > 0) {//if number of steps given is negative;
@@ -203,21 +229,24 @@ void SmallStep(double angle1, double angle2) {
 	digitalWrite(MS1_1, HIGH);
 	digitalWrite(MS2_1, HIGH);
 	digitalWrite(MS1_2, HIGH);
-	digitalWrite(MS2_2, HIGH);// These have to be high all the time, i have no idea why im even including this here
+	digitalWrite(MS2_2, HIGH);//These have to be high all the time, i have no idea why im even including this here
 
+	//number of steps
 	int steps1 = abs(angle1 / 0.00393);
-	int steps2 = abs(angle2 / 0.00393);// Keep in mind all angles need to be measured in radians for the math to work out
+	int steps2 = abs(angle2 / 0.00393);
 	//0.225 deg == 0.00393 rad
 
+	//checks which no. steps is larger
 	int Max;
-
 	if (steps1 >= steps2)
 		Max = steps1;
 	else
 		Max = steps2;
 
-	// This loop is ensure that the motor's movements are smooth as it forces the motor to take sequential steps
+	//This loop is ensure that the motor's movements are smooth as it forces the motor to take sequential steps 
+	//Loops [larger number of steps] times
 	for (int x = 0; x < Max; x++) {
+		//move one step
 		if (steps1 > 0) {
 			digitalWrite(stp1, HIGH);
 			delay(t);
@@ -225,6 +254,7 @@ void SmallStep(double angle1, double angle2) {
 			delay(t);
 		}
 
+		//move one step
 		if (steps2 > 0) {
 			digitalWrite(stp2, HIGH);
 			delay(t);
@@ -232,7 +262,10 @@ void SmallStep(double angle1, double angle2) {
 			delay(t);
 		}
 
+		//eventually the smaller one get to zero and stops looping
 		steps1--;
 		steps2--;
 	}
 }
+
+
