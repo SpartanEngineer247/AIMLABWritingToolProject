@@ -1,0 +1,312 @@
+#define stp1 2 //high makes the motor move, low makes it not move
+#define dir1 3 //high is clockwise direction, low is counterclockwise direction
+#define MS1_1 4 //divider pin 1, HIGH allows it to make a microstep
+#define MS2_1 5 //divider pin 2, HIGH allows it to make a microstep
+#define EN1  6 //enabler, determines whether the motor is engaged or not, HIGH turns off the motor
+
+//Below are all copies of above, except now there's two of them because you need to drive both motors
+//Motor 2 is the left motor on the board
+
+#define stp2   7
+#define dir2   8
+#define MS1_2  9
+#define MS2_2 10
+#define EN2   11
+
+#define num_points 60
+
+//These variables are the angle of the motor at initial position (90 degrees) in radians
+#define A1 1.5708 
+#define A2 1.5708
+
+//This variable controls the speed of the motor movement. The larger the value t the slower the movement
+#define t 2
+
+//Point class. Instance variables: x and y. Accessor, mutator, and getAngle functions.
+class Point {
+	double x, y;
+
+	//These values are the lengths expressed in meters
+	const double la = 0.1, lb = 0.1, lc = 0.1; //METERS!!!!!
+public:
+	Point(double a=0.05, double b=0) {
+		x = a;// I used this as the default constructor for testing purposes only
+		y = b;
+	}
+	//setters
+	void setX(double x) {
+		this->x = x;
+	}
+	void setY(double y) {
+		this->y = y;
+	}
+	//getters
+	double getX() {
+		return x;
+	}
+	double getY() {
+		return y;
+	}
+
+	//inverse kinematics for theta1
+	double getAngle1() {
+		double E1 = -2 * la*x;
+		double F1 = -2 * la*y;
+		double G1 = la * la - lb * lb + x * x + y * y;
+
+		return 2 * atan((-1 * F1 + sqrt(E1 * E1 + F1 * F1 - G1 * G1)) / (G1 - E1));
+	}
+
+	//inverse kinematics for theta4
+	double getAngle2() {
+		double E4 = 2 * la*(lc - x);
+		double F4 = -2 * la * y;
+		double G4 = lc * lc + la * la - lb * lb + x * x + y * y - 2 * lc*x;
+
+		return 2 * atan((-1 * F4 - sqrt(E4*E4 + F4 * F4 - G4 * G4)) / (G4 - E4));
+
+	}
+};
+
+//Declare variables for functions
+char user_input;
+int x;
+int y;
+int state;
+double angle;
+char letter;
+
+int x2;
+int y2;
+int state2;
+
+void setup() {
+
+	pinMode(stp1, OUTPUT);
+	pinMode(dir1, OUTPUT);
+	pinMode(MS1_1, OUTPUT);
+	pinMode(MS2_1, OUTPUT);
+	pinMode(EN1, OUTPUT);
+
+	pinMode(stp2, OUTPUT);
+	pinMode(dir2, OUTPUT);
+	pinMode(MS1_2, OUTPUT);
+	pinMode(MS2_2, OUTPUT);
+	pinMode(EN2, OUTPUT);
+
+	resetEDPins1(); //Set step, direction, microstep and enable pins to default states
+	resetEDPins2();
+
+	Serial.begin(9600); //Open Serial connection for debugging
+	Serial.println("Begin motor control \n");
+
+	//Serial.println("What letter would you like to type?");
+	//Serial.println("Input any letters from A-Z, write them as capital letters");
+	//Serial.println();
+}
+
+//Main loop
+void loop() {
+	while (Serial.available()) {
+		//letter = Serial.parse(); //Assign user input to the letter
+		digitalWrite(EN1, LOW); //Pull enable pin low to allow motor control
+		digitalWrite(EN2, LOW); //Pull enable pin low to allow motor control
+
+		//An array of Point objects, and a point P1
+		Point P[num_points], P1;
+		// This was added to test the functionality of the motor if a point with x,y coordinates was passed
+		//The motor then should move the effector P to that point
+		//The array with [num_points] size is how most likely how the device will operate in the end, as we're gonna be passing
+		//an array filled with points to represent a letter (or any shape)
+
+		//These arrays hold the angles that correspond to the points
+		double angle1[num_points], angle2[num_points];
+
+		P1.setX(0);
+		P1.setY(18);// Added for testing
+
+
+		// Small step is the function that moves the motor by a certain angle, it needs two arguments:
+		//the angles of the first and second motors
+		//SmallStep(P1.getAngle1(), P1.getAngle2());
+		//delay(10000);
+
+		// loop to set the points to a straight line. purely for testing (we'll have the letter arrays later on)
+		for (int x = num_points - 1; x >= 0; x--) {
+			P[x].setY(x*0.01);
+			P[x].setX(0.05);
+		}
+
+		//gets the angles for these points
+		for (int x = 0; x < num_points; x++) {
+			angle1[x] = P[x].getAngle1();
+			angle2[x] = P[x].getAngle2();
+		}
+
+		
+		// movement is the function that moves P across entire shapes  (aka collections/arrays of angles)
+		movement(angle1, angle2);
+		
+		//Point where both angles are 90
+		Point O(0.05, 0.0133975);
+		//??OR Point O(0.05, 0.1866025404);
+		//y coordinate is basically (2+\sqrt3)/20 or (2-\sqrt3)/20
+
+		//receives the last and initial point and initializes an arrary with Points forming a straight line between them
+		Point line[10];
+		getLine(P[num_points - 1], O, line);
+
+		//takes array of points, moves or whatever
+		drawPath(line);
+		delay(3000);
+
+
+		//SmallStepMode1(angle);
+		//SmallStepMode2(angle);//Motor moves the indicated angle
+		
+		//All pins are reset in order to use again
+		resetEDPins1();
+		resetEDPins2();
+	}
+}
+
+void getLine(Point i, Point l, Point line[]) {
+	int n = 10; //number of intervals (for now?)
+	//a and b are the differences between the final and initial points
+	double a = l.getX() - i.getX(), b = l.getY() - i.getY();
+	//divided by the number of intervals, that's the length of each segment
+	double delX = a / n, delY = b / n;
+	//temporarily hold the coordinates of each step for array initialization
+	double x, y;
+
+	//loop starts from 1 because the final position should be the last point in the array
+	for (int j = 1; j <= n; j++) {
+		//x and y coordinates of the line
+		x = i.getX() + j * delX;
+		y = i.getY() + j * delY;
+
+		//sets the coordinates of the Points of the array accordingly
+		line[j - 1].setX(x);
+		line[j - 1].setY(y);
+	}
+}
+
+void drawPath(Point line[]) {
+	double a1[num_points], a2[num_points];
+	//gets the angles for these points
+	for (int x = 0; x < num_points; x++) {
+		a1[x] = line[x].getAngle1();
+		a2[x] = line[x].getAngle2();
+	}
+
+	// movement is the function that moves P across entire shapes
+	movement(a1, a2);
+}
+
+
+//takes two arrays of angles (one for each motor), moves through these angles
+void movement(double motor1[], double motor2[]) {
+
+	// difference between intial and final positions are obtained
+	double angle1 = motor1[0] - A1;
+	double angle2 = motor2[0] - A2;
+
+	// this is the first step
+	SmallStep(angle1, angle2);
+
+	// loop that moves the motor across the length and path of a shape or letter
+	for (int x = 1; x < num_points; x++) {
+		//gets difference between every angle and the previous one
+		angle1 = motor1[x] - motor1[x - 1];
+		angle2 = motor2[x] - motor2[x - 1];
+
+		//passes to the actual motion function
+		SmallStep(angle1, angle2);
+	}
+
+	//Difference between original and last agle
+	angle1 = A1 - motor1[num_points - 1];
+	angle2 = A2 - motor2[num_points - 1];
+
+	//Here, P is put back in its intial position
+	//(by moving it through the difference between the last and the initial angles)
+	SmallStep(angle1, angle2);
+
+}
+
+void SmallStep(double angle1, double angle2) {
+
+	if (angle1 > 0) {//if number of steps given is negative;
+		digitalWrite(dir1, LOW); //dir set to LOW or counter-clockwise
+	}
+	else if (angle1 < 0) {
+		digitalWrite(dir1, HIGH);// else, dir is set to HIGH or clockwise
+	}
+
+	if (angle2 > 0) {//if number of steps given is negative;
+		digitalWrite(dir2, LOW); //dir set to LOW or counter-clockwise
+	}
+	else if (angle2 < 0) {
+		digitalWrite(dir2, HIGH);// else, dir is set to HIGH or clockwise
+	}
+
+	digitalWrite(MS1_1, HIGH);
+	digitalWrite(MS2_1, HIGH);
+	digitalWrite(MS1_2, HIGH);
+	digitalWrite(MS2_2, HIGH);// These have to be high all the time, i have no idea why im even including this here
+
+	//number of steps
+	int steps1 = abs(angle1 / 0.00393);
+	int steps2 = abs(angle2 / 0.00393);
+	//0.225 deg == 0.00393 rad
+
+	//checks which no. steps is larger
+	int Max;
+	if (steps1 >= steps2)
+		Max = steps1;
+	else
+		Max = steps2;
+
+	// This loop is ensure that the motor's movements are smooth as it forces the motor to take sequential steps
+	//Loops [larger number of steps] times
+	for (int x = 0; x < Max; x++) {
+		//move one step
+		if (steps1 > 0) {
+			digitalWrite(stp1, HIGH);
+			delay(t);
+			digitalWrite(stp1, LOW);
+			delay(t);
+		}
+
+		//move one step
+		if (steps2 > 0) {
+			digitalWrite(stp2, HIGH);
+			delay(t);
+			digitalWrite(stp2, LOW);
+			delay(t);
+		}
+
+		//eventually the smaller one get to zero and stops looping
+		steps1--;
+		steps2--;
+	}
+}
+
+//Reset Easy Driver pins to default states
+void resetEDPins1()
+{
+	digitalWrite(stp1, LOW);
+	digitalWrite(dir1, LOW);
+	digitalWrite(MS1_1, LOW);
+	digitalWrite(MS2_1, LOW);
+	digitalWrite(EN1, HIGH);
+}
+
+void resetEDPins2()
+{
+	digitalWrite(stp2, LOW);
+	digitalWrite(dir2, LOW);
+	digitalWrite(MS1_2, LOW);
+	digitalWrite(MS2_2, LOW);
+	digitalWrite(EN2, HIGH);
+}
