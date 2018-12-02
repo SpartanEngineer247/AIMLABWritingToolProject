@@ -29,6 +29,10 @@
 class Point {
 	double x, y;
 
+	//Specification of length of arms and dimensions of the motors.
+	//la refers to the arm attached directly to the motor
+	//lb refers to the arm attached secondary to the first arm
+	//lc refers to the distance between two motors' axis points.
 	//These values are the lengths expressed in meters
 	const double la = 0.1, lb = 0.1, lc = 0.1; //METERS!!!!!
 	
@@ -55,7 +59,7 @@ public:
 		return y;
 	}
 
-	//inverse kinematics for theta1, the 
+	//inverse kinematics for theta1, the angle between the left motor and postivive x direction.
 	double getAngle1() {
 		double E1 = -2 * la * x;
 		double F1 = -2 * la * y;
@@ -64,7 +68,7 @@ public:
 		return 2 * atan((-1 * F1 + sqrt(E1 * E1 + F1 * F1 - G1 * G1)) / (G1 - E1));
 	}
 
-	//inverse kinematics for theta4
+	//inverse kinematics for theta4, the angle between the right motor and the positive x direction.
 	double getAngle2() {
 		double E4 = 2 * la*(lc - x);
 		double F4 = -2 * la * y;
@@ -101,13 +105,16 @@ void setup() {
 	pinMode(MS2_2, OUTPUT);
 	pinMode(EN2, OUTPUT);
 
-	resetEDPins1(); //Set step, direction, microstep and enable pins to default states
+	//Returns step, direction, microstep and enable pins to default states
+	resetEDPins1();
 	resetEDPins2();
 
-	Serial.begin(9600); //Open Serial connection for debugging
+	//Open Serial connection for debugging
+	Serial.begin(9600);
 	Serial.println("Begin motor control \n");
-
-	//Serial.println("What letter would you like to type?");
+	
+	//The below code is to be implemented once letter coordinates are received
+	//Serial.println("What letter would you like to write?");
 	//Serial.println("Input any letters from A-Z, write them as capital letters");
 	//Serial.println();
 }
@@ -121,10 +128,10 @@ void loop() {
 
 		//An array of Point objects, and a point P1
 		Point P[num_points], P1;
-		// This was added to test the functionality of the motor if a point with x,y coordinates was passed
+		//This was added to test the functionality of the motor if a point with x, y coordinates was passed
 		//The motor then should move the effector P to that point
-		//The array with [num_points] size is how most likely how the device will operate in the end, as we're gonna be passing
-		//an array filled with points to represent a letter (or any shape)
+		//The final version of the code will likely receive an array size [num_points] of point classes
+		//as an input which holds the critical points to form a letter or shape.
 
 		//These arrays hold the angles that correspond to the points
 		double angle1[num_points], angle2[num_points];
@@ -133,12 +140,13 @@ void loop() {
 		P1.setY(18);// Added for testing
 
 
-		// Small step is the function that moves the motor by a certain angle, it needs two arguments:
+		//Small step takes the function that moves the motor by a certain angle, it needs two arguments:
 		//the angles of the first and second motors
 		//SmallStep(P1.getAngle1(), P1.getAngle2());
 		//delay(10000);
 
-		// loop to set the points to a straight line. purely for testing (we'll have the letter arrays later on)
+		//loop create a set of points that draws a stright line. purely for testing
+		//this loop will later be replaced with a input array of points that draw a desired shape
 		for (int x = num_points - 1; x >= 0; x--) {
 			P[x].setY(x*0.01);
 			P[x].setX(0.05);
@@ -151,20 +159,26 @@ void loop() {
 		}
 
 		
-		// movement is the function that moves P across entire shapes  (aka collections/arrays of angles)
+		//Movement function engages the motors to move to the desired target angles
 		movement(angle1, angle2);
 		
-		//Point where both angles are 90
+		//Creates an origin point O where both theta1 and theta 4 are 90 degrees
 		Point O(0.05, 0.0133975);
 		//??OR Point O(0.05, 0.1866025404);
 		//y coordinate is basically (2+\sqrt3)/20 or (2-\sqrt3)/20
 
-		//receives the last and initial point and initializes an arrary with Points forming a straight line between them
+		//getLine function takes the last known position of the motors within the program
+		//(required as the motors themselves do not know their own orientation)
+		//and creates an array of points that forms a straight line to the Origin
 		Point line[10];
 		getLine(P[num_points - 1], O, line);
 
-		//takes array of points, moves or whatever
+		//takes array of points created by getLine function and executes movement to the Origin
+		//essentially this function returns the motors to the original location before the code
+		//can be run again
 		drawPath(line);
+		
+		
 		delay(3000);
 
 
@@ -178,7 +192,7 @@ void loop() {
 }
 
 void getLine(Point i, Point l, Point line[]) {
-	int n = 10; //number of intervals (for now?)
+	int n = 10; //arbitary number of 10 points were created to ensure smooth movement to the origin
 	//a and b are the differences between the final and initial points
 	double a = l.getX() - i.getX(), b = l.getY() - i.getY();
 	//divided by the number of intervals, that's the length of each segment
@@ -206,7 +220,8 @@ void drawPath(Point line[]) {
 		a2[x] = line[x].getAngle2();
 	}
 
-	// movement is the function that moves P across entire shapes
+	//movement function takes array of angles for each motor
+	//and engages the motors to move to those desired angles
 	movement(a1, a2);
 }
 
@@ -262,12 +277,17 @@ void SmallStep(double angle1, double angle2) {
 	digitalWrite(MS1_2, HIGH);
 	digitalWrite(MS2_2, HIGH);// These have to be high all the time, i have no idea why im even including this here
 
-	//number of steps
+	//The stepper motors moves in discrete angles.
+	//These functions below calculates the number of discrete angles required to move the desired angle
 	int steps1 = abs(angle1 / 0.00393);
 	int steps2 = abs(angle2 / 0.00393);
 	//0.225 deg == 0.00393 rad
 
-	//checks which no. steps is larger
+	//the functions below checks which of the two motors require greater movement
+	//it sets the greater movement as the value 'max'
+	//it then runs a loop where each motor is moved by a single discrete step
+	//until it reaches 'max' number of steps
+	//the motor with less movement is stopped before 'max' is reached
 	int Max;
 	if (steps1 >= steps2)
 		Max = steps1;
@@ -276,6 +296,8 @@ void SmallStep(double angle1, double angle2) {
 
 	// This loop is ensure that the motor's movements are smooth as it forces the motor to take sequential steps
 	//Loops [larger number of steps] times
+	//delay(t) is used to control the motor movement speed
+	//where larger t value leads to slower movement
 	for (int x = 0; x < Max; x++) {
 		//move one step
 		if (steps1 > 0) {
@@ -293,7 +315,8 @@ void SmallStep(double angle1, double angle2) {
 			delay(t);
 		}
 
-		//eventually the smaller one get to zero and stops looping
+		//eventually the smaller one get to zero and stops moving
+		//and the loop is proken once the larger one gets to zero
 		steps1--;
 		steps2--;
 	}
