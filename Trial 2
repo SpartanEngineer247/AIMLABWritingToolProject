@@ -162,6 +162,12 @@ void loop() {
 		//Movement function engages the motors to move to the desired target angles
 		movement(angle1, angle2);
 		
+		//!!! ADDED FOR TESTING
+		cout << "After Movement Function";
+		
+		//!!!! ADDED DELAY AFTER MOVEMENT SO THAT GETLINE DOES NOT EXECUTE IMMEDIATELY AFTER MOVEMENT
+		delay(3000);
+		
 		//Creates an origin point O where both theta1 and theta 4 are 90 degrees
 		Point O(0.05, 0.0133975);
 		//??OR Point O(0.05, 0.1866025404);
@@ -228,11 +234,17 @@ void drawPath(Point line[]) {
 
 //takes two arrays of angles (one for each motor), moves through these angles
 void movement(double motor1[], double motor2[]) {
-
+	
+	//!!!ADDED FOR TESTING
+	cout << "START OF MOVEMENT FUNCTION";
+	
 	// difference between intial and final positions are obtained
 	double angle1 = motor1[0] - A1;
 	double angle2 = motor2[0] - A2;
-
+	
+	//!!!ADDED FOR TESTING
+	cout << "BEFORE FIRST CALL OF SMALLSTEP FUNCTION";
+	
 	// this is the first step
 	SmallStep(angle1, angle2);
 
@@ -249,11 +261,16 @@ void movement(double motor1[], double motor2[]) {
 	//Difference between original and last agle
 	angle1 = A1 - motor1[num_points - 1];
 	angle2 = A2 - motor2[num_points - 1];
-
+	
+	//!!!ADDED FOR TESTING
+	cout << "BEFORE SECOND CALL OF SMALLESTEP FUNCTION";
+	
 	//Here, P is put back in its intial position
 	//(by moving it through the difference between the last and the initial angles)
 	SmallStep(angle1, angle2);
-
+	
+	//!!!ADDED FOR TESTING
+	cout << "END OF MOVEMENT FUNCTION";
 }
 
 void SmallStep(double angle1, double angle2) {
