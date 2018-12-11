@@ -115,39 +115,14 @@ void loop() {
 		digitalWrite(EN1, LOW); //Pull enable pin low to allow motor control
 		digitalWrite(EN2, LOW); //Pull enable pin low to allow motor control
 
-		Point P[num_points], P1;
-		// This was added to test the functionality of the motor if a point with x,y coordinates was passed
-		//The motor then should move the effector P to that point
-		//The array with [num_points] size is how most likely how the device will operate in the end, as we're gonna be passing
-		//an array filled with points to represent a letter (or any shape)
-		double angle1[num_points], angle2[num_points];
-		//These arrays hold the angles that correspond to the points
-
-		P1.setX(0);
-		P1.setY(18);// Added for testing
-
-
-
-		SmallStep(P1.getAngle1(), P1.getAngle2());// Small step is the function that moves the motor by a certain angle, it needs two arguments
-		//the angle of the first and second motors
-		delay(10000);
-
-		for (int x = 0; x < num_points; x++) {// loop to set the points to a straight line. purely for testing
-			P[x].setY(x);
-		}
-
-		for (int x = 0; x < num_points; x++) {
-			angle1[x] = P[x].getAngle1();
-			angle2[x] = P[x].getAngle2();
-		}
+		
+		angle1[5]={1.6,1.7,1.8,1.9,2.0};
+		angle2[5]={1.5,1.4,1.3,1.2,1.1};
 
 
 		movement(angle1, angle2);// movement is the function that moves P across entire shapes
 		delay(3000);
 
-
-		//SmallStepMode1(angle);
-		//SmallStepMode2(angle);//Motor moves the indicated angle
 
 		resetEDPins1();
 		resetEDPins2();//All pins are reset in order to use again
